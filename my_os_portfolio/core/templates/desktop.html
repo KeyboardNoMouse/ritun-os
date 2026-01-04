@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ritun OS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+        .glass {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .window-node {
+            position: fixed;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            will-change: transform, top, left, width, height;
+            display: flex;
+            flex-direction: column;
+        }
+        .is-maximized {
+            top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important;
+            border-radius: 0 !important; z-index: 60 !important;
+        }
+        .is-minimized {
+            opacity: 0; transform: scale(0.7) translateY(300px); pointer-events: none;
+        }
+    </style>
+</head>
+<body class="bg-black h-screen w-screen overflow-hidden select-none font-sans text-white"
+      x-data="osData()" x-init="initOS()">
+
+    <div class="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-[2000ms]"
+         :class="{'scale-110 blur-md': bootOpen, 'scale-100 blur-0': !bootOpen}"
+         style="background-image: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop');">
+        <div class="absolute inset-0 bg-black/30"></div>
+    </div>
+
+    <div x-show="bootOpen" class="absolute inset-0 z-[100] bg-black flex flex-col items-center justify-center transition-opacity duration-1000">
+        <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-6"></div>
+        <h1 class="text-3xl font-bold tracking-[0.3em] text-white animate-pulse uppercase">RITUN OS</h1>
+        <p class="text-xs text-gray-500 mt-3 font-mono">INITIALIZING SYSTEM...</p>
+    </div>
+
+    <div x-show="!bootOpen" x-transition:enter="transition ease-out duration-1000 delay-500"
+         x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+         class="absolute top-8 left-8 flex flex-col gap-6 z-10">
+         
+         <div @click="openWindow('about')" class="group flex flex-col items-center cursor-pointer w-24">
+            <div class="w-14 h-14 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 flex items-center justify-center group-hover:bg-white/10 transition-all shadow-lg">
+                <svg class="w-7 h-7 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+            </div>
+            <span class="text-xs mt-2 text-center text-shadow font-medium">Profile</span>
+         </div>
+         <div @click="openWindow('browser')" class="group flex flex-col items-center cursor-pointer w-24">
+            <div class="w-14 h-14 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 flex items-center justify-center group-hover:bg-white/10 transition-all shadow-lg">
+                <svg class="w-7 h-7 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+            </div>
+            <span class="text-xs mt-2 text-center text-shadow font-medium">Browser</span>
+         </div>
+         <div @click="openWindow('terminal')" class="group flex flex-col items-center cursor-pointer w-24">
+            <div class="w-14 h-14 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 flex items-center justify-center group-hover:bg-white/10 transition-all shadow-lg">
+                <svg class="w-7 h-7 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 17l6-6-6-6m8 14h8"></path></svg>
+            </div>
+            <span class="text-xs mt-2 text-center text-shadow font-medium">Terminal</span>
+         </div>
+         <div @click="openWindow('vscode')" class="group flex flex-col items-center cursor-pointer w-24">
+            <div class="w-14 h-14 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 flex items-center justify-center group-hover:bg-white/10 transition-all shadow-lg">
+                <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+            </div>
+            <span class="text-xs mt-2 text-center text-shadow font-medium">Code</span>
+         </div>
+    </div>
+
+    <div id="dock" x-cloak x-show="!bootOpen" x-transition:enter="transition ease-out duration-1000 delay-700"
+         x-transition:enter-start="opacity-0 translate-y-20" x-transition:enter-end="opacity-100 translate-y-0"
+         class="fixed bottom-4 left-1/2 -translate-x-1/2 h-16 px-4 glass rounded-2xl flex items-center space-x-3 z-50">
+         <div class="w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition cursor-pointer">
+             <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+         </div>
+         <div class="w-[1px] h-8 bg-white/10 mx-2"></div>
+         <template x-for="app in dockApps">
+            <div @click="openWindow(app.id)" class="relative group cursor-pointer transition hover:-translate-y-2">
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg border border-white/5" :class="app.color">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-html="app.icon"></svg>
+                </div>
+                <div x-show="windows[app.id].open" class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-white rounded-full"></div>
+            </div>
+         </template>
+         <div class="w-[1px] h-8 bg-white/10 mx-2"></div>
+         <div class="text-xs font-mono text-slate-300 w-16 text-center" x-text="time"></div>
+    </div>
+
+    <div id="win-about" x-show="windows.about.open" x-cloak @mousedown="focusWindow('about')"
+         :class="{'z-50': focused === 'about', 'z-40': focused !== 'about', 'is-minimized': windows.about.min, 'is-maximized': windows.about.max}"
+         class="window-node glass rounded-xl overflow-hidden top-[20%] left-[35%] w-[350px]">
+         <div class="window-header bg-white/5 border-b border-white/5 px-4 py-3 flex justify-between items-center cursor-default select-none">
+            <div class="flex space-x-2"><div @click.stop="windows.about.open = false" class="w-3 h-3 bg-red-500 rounded-full cursor-pointer"></div><div @click.stop="windows.about.min = true" class="w-3 h-3 bg-yellow-500 rounded-full cursor-pointer"></div><div @click.stop="windows.about.max = !windows.about.max" class="w-3 h-3 bg-green-500 rounded-full cursor-pointer"></div></div>
+            <span class="text-[10px] font-mono text-slate-400">system_profile</span><div class="w-8"></div>
+         </div>
+         <div class="flex-1 p-8 flex flex-col items-center justify-center bg-slate-900/80 text-white min-h-[300px]">
+            <div class="relative group mb-6">
+                <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full blur opacity-40 group-hover:opacity-75 transition"></div>
+                <img src="profile.jpg" onerror="this.src='https://ui-avatars.com/api/?name=Ritun+Jain&background=0D8ABC&color=fff&size=128'" class="relative w-28 h-28 rounded-full border-2 border-white/20 object-cover shadow-xl">
+            </div>
+            <h3 class="font-bold text-xl tracking-wide">Ritun Jain</h3>
+            <p class="text-xs font-mono text-blue-400 mt-1 uppercase tracking-wider">Full Stack Architect</p>
+            <div class="w-full max-w-[200px] border-t border-white/10 my-6"></div>
+            <div class="w-full max-w-[250px] space-y-2 text-sm">
+                <div class="flex justify-between text-slate-400"><span>OS Version</span><span class="font-mono text-slate-200">RitunOS v2.0</span></div>
+                <div class="flex justify-between text-slate-400"><span>Memory</span><span class="font-mono text-slate-200">32 GB</span></div>
+                <div class="flex justify-between text-slate-400"><span>Status</span><span class="text-green-400 text-xs">● Online</span></div>
+            </div>
+         </div>
+    </div>
+
+    <div id="win-browser" x-show="windows.browser.open" x-cloak
+     @mousedown="focusWindow('browser')"
+     :class="{'z-50': focused === 'browser', 'z-40': focused !== 'browser', 'is-minimized': windows.browser.min, 'is-maximized': windows.browser.max}"
+     class="window-node glass rounded-xl overflow-hidden top-[15%] left-[20%] w-[900px] h-[600px]">
+     
+     <div class="window-header bg-slate-900 border-b border-white/5 p-3 flex items-center space-x-4 cursor-default select-none">
+        <div class="flex space-x-2 shrink-0">
+            <div @click.stop="windows.browser.open = false" class="w-3 h-3 bg-red-500 rounded-full cursor-pointer hover:bg-red-600"></div>
+            <div @click.stop="windows.browser.min = true" class="w-3 h-3 bg-yellow-500 rounded-full cursor-pointer hover:bg-yellow-600"></div>
+            <div @click.stop="windows.browser.max = !windows.browser.max" class="w-3 h-3 bg-green-500 rounded-full cursor-pointer hover:bg-green-600"></div>
+        </div>
+        <div class="flex-1 bg-slate-800 rounded px-3 py-1.5 text-xs text-slate-400 flex items-center font-mono overflow-hidden">
+            <svg class="w-3 h-3 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            https://connect.ritun.dev/socials
+        </div>
+     </div>
+     
+     <div class="flex-1 bg-slate-900/90 p-10 flex flex-col items-center justify-center text-center overflow-auto">
+        <h1 class="text-4xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">Social Hub</h1>
+        <p class="text-slate-400 mb-12 text-lg">Where to find me on the web.</p>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 w-full max-w-5xl px-4">
+            
+            <a href="https://www.linkedin.com/in/ritun-jain-23b683309/" target="_blank" 
+               class="group relative p-6 bg-slate-800/40 rounded-2xl border border-white/5 hover:bg-[#0077b5] transition-all duration-300 flex flex-col items-center justify-center overflow-hidden">
+                <div class="absolute inset-0 bg-[#0077b5] opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-500"></div>
+                <svg class="w-10 h-10 mb-4 text-white/80 group-hover:text-white group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                <div class="text-xl font-bold text-white mb-1 relative z-10">LinkedIn</div>
+                <div class="text-sm text-slate-400 group-hover:text-white/90 relative z-10">Let's Connect</div>
+            </a>
+
+            <a href="https://github.com/KeyboardNoMouse" target="_blank" 
+               class="group relative p-6 bg-slate-800/40 rounded-2xl border border-white/5 hover:bg-black transition-all duration-300 flex flex-col items-center justify-center overflow-hidden">
+                <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 blur-xl transition-opacity duration-500"></div>
+                <svg class="w-10 h-10 mb-4 text-white/80 group-hover:text-white group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.419-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+                <div class="text-xl font-bold text-white mb-1 relative z-10">GitHub</div>
+                <div class="text-sm text-slate-400 group-hover:text-white/90 relative z-10">Check my Repos</div>
+            </a>
+
+            <div x-data="{ copied: false, username: 'kbnomouse' }" 
+                 @click="navigator.clipboard.writeText(username); copied = true; setTimeout(() => copied = false, 2000)" 
+                 class="group relative p-6 bg-slate-800/40 rounded-2xl border border-white/5 hover:bg-[#5865F2] transition-all duration-300 flex flex-col items-center justify-center overflow-hidden cursor-pointer">
+                <div class="absolute inset-0 bg-[#5865F2] opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-500"></div>
+                <svg class="w-10 h-10 mb-4 text-white/80 group-hover:text-white group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.419-2.1568 2.419zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.419-2.1568 2.419z"/></svg>
+                <div class="text-xl font-bold text-white mb-1 relative z-10">Discord</div>
+                <div class="text-sm text-slate-400 font-mono group-hover:text-white/90 relative z-10" 
+                     x-text="copied ? 'Copied!' : 'Click to Copy ID'"></div>
+            </div>
+
+            <a href="https://www.instagram.com/_ritun_07/" target="_blank" 
+               class="group relative p-6 bg-slate-800/40 rounded-2xl border border-white/5 hover:bg-gradient-to-tr hover:from-yellow-500 hover:via-pink-500 hover:to-purple-500 transition-all duration-300 flex flex-col items-center justify-center overflow-hidden">
+                <div class="absolute inset-0 bg-pink-500 opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-500"></div>
+                <svg class="w-10 h-10 mb-4 text-white/80 group-hover:text-white group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                <div class="text-xl font-bold text-white mb-1 relative z-10">Instagram</div>
+                <div class="text-sm text-slate-400 group-hover:text-white/90 relative z-10">@_ritun_07</div>
+            </a>
+        </div>
+     </div>
+</div>
+
+   <div id="win-terminal" x-show="windows.terminal.open" x-cloak
+     @mousedown="focusWindow('terminal')"
+     @click="document.getElementById('term-input').focus()"
+     :class="{'z-50': focused === 'terminal', 'z-40': focused !== 'terminal', 'is-minimized': windows.terminal.min, 'is-maximized': windows.terminal.max}"
+     class="window-node bg-slate-900/95 rounded-xl overflow-hidden shadow-2xl border border-slate-700 font-mono text-sm top-[25%] left-[25%] w-[600px] h-[400px]">
+     
+     <div class="window-header bg-slate-800 px-4 py-2 flex items-center space-x-2 cursor-default select-none">
+         <div @click.stop="windows.terminal.open = false" class="w-3 h-3 bg-red-500 rounded-full cursor-pointer"></div>
+         <div @click.stop="windows.terminal.min = true" class="w-3 h-3 bg-yellow-500 rounded-full cursor-pointer"></div>
+         <div @click.stop="windows.terminal.max = !windows.terminal.max" class="w-3 h-3 bg-green-500 rounded-full cursor-pointer"></div>
+         <span class="text-slate-400 text-xs ml-4">user@ritun-os:~</span>
+     </div>
+     
+     <div id="term-content" class="p-4 flex-1 overflow-auto cursor-text" style="font-family: 'Courier New', monospace;">
+         
+         <template x-for="line in term.history">
+             <div class="mb-1">
+                 <span x-show="line.type === 'input'" class="text-blue-400 mr-2 font-bold">user@ritun-os:~$</span>
+                 <span :class="line.type === 'input' ? 'text-white' : 'text-green-400'" x-text="line.text"></span>
+             </div>
+         </template>
+
+         <div class="flex items-center">
+             <span class="text-blue-400 mr-2 font-bold whitespace-nowrap">user@ritun-os:~$</span>
+             <input id="term-input" 
+                    type="text" 
+                    x-model="term.input" 
+                    @keydown.enter="term.handle($data)"
+                    autocomplete="off" 
+                    autofocus
+                    class="bg-transparent border-none outline-none text-white w-full p-0 m-0 font-inherit caret-white">
+         </div>
+     </div>
+</div>
+
+    <div id="win-vscode" x-show="windows.vscode.open" x-cloak @mousedown="focusWindow('vscode')"
+         :class="{'z-50': focused === 'vscode', 'z-40': focused !== 'vscode', 'is-minimized': windows.vscode.min, 'is-maximized': windows.vscode.max}"
+         class="window-node bg-[#1e1e1e] rounded-xl overflow-hidden shadow-2xl border border-black/50 top-[10%] left-[10%] w-[800px] h-[550px]">
+         <div class="window-header bg-[#333333] px-4 py-2 flex items-center justify-between cursor-default select-none">
+             <div class="flex space-x-2"><div @click.stop="windows.vscode.open = false" class="w-3 h-3 bg-red-500 rounded-full cursor-pointer"></div><div @click.stop="windows.vscode.min = true" class="w-3 h-3 bg-yellow-500 rounded-full cursor-pointer"></div><div @click.stop="windows.vscode.max = !windows.vscode.max" class="w-3 h-3 bg-green-500 rounded-full cursor-pointer"></div></div>
+             <span class="text-slate-400 text-xs">README.md - Visual Studio Code</span><div class="w-10"></div>
+         </div>
+         <div class="flex flex-1 overflow-hidden">
+             <div class="w-12 bg-[#252526] flex flex-col items-center py-4 space-y-4 text-slate-500 border-r border-[#333]">
+                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                 <svg class="w-6 h-6 hover:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+             </div>
+             <div class="flex-1 bg-[#1e1e1e] p-6 font-sans text-sm text-gray-300 overflow-auto">
+                 <h1 class="text-3xl font-bold text-blue-400 mb-4"># Ritun OS <span class="text-xs font-normal text-gray-500 border border-gray-600 rounded px-1">v2.0</span></h1>
+                 <p class="mb-6 text-gray-400 leading-relaxed">Welcome to my interactive portfolio! This project simulates a full desktop environment in the browser to showcase my skills in Full Stack Architecture.</p>
+                 <h2 class="text-lg font-bold text-purple-400 mb-3 border-b border-gray-700 pb-1">## 🛠️ Tech Stack</h2>
+                 <div class="grid grid-cols-2 gap-4 mb-6">
+                     <div><h3 class="text-yellow-200 font-bold mb-1">Backend</h3><ul class="list-disc pl-4 space-y-1 text-gray-400"><li><strong class="text-white">Django (Python)</strong></li><li>REST APIs</li><li>PostgreSQL</li></ul></div>
+                     <div><h3 class="text-green-300 font-bold mb-1">Frontend</h3><ul class="list-disc pl-4 space-y-1 text-gray-400"><li><strong class="text-white">Tailwind CSS</strong></li><li><strong class="text-white">Alpine.js</strong></li><li>HTML5 Canvas</li></ul></div>
+                 </div>
+                 <h2 class="text-lg font-bold text-green-400 mb-3 border-b border-gray-700 pb-1">## ✨ Key Features</h2>
+                 <ul class="space-y-2 text-gray-400 mb-6"><li>🖥️ <strong>Window Management:</strong> Draggable, minimizable, maximizable windows.</li><li>🚀 <strong>Boot Sequence:</strong> Realistic OS startup.</li><li>🎨 <strong>Glassmorphism:</strong> Modern UI design.</li><li><strong> Terminal Commands:</strong> Custom Terminal Commands (type help)</li></ul>
+                 <div class="h-10"></div>
+             </div>
+         </div>
+    </div>
+
+    <script>
+        function osData() {
+            return {
+                bootOpen: true, focused: 'none', time: '00:00',
+                dockApps: [
+                    { id: 'about', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>', color: 'bg-blue-600' },
+                    { id: 'browser', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>', color: 'bg-purple-600' },
+                    { id: 'terminal', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 17l6-6-6-6m8 14h8"></path>', color: 'bg-slate-800' },
+                    { id: 'vscode', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>', color: 'bg-blue-500' }
+                ],
+                windows: { about: {open:false,min:false,max:false}, browser: {open:false,min:false,max:false}, terminal: {open:false,min:false,max:false}, vscode: {open:false,min:false,max:false} },
+                initOS() {
+                    setInterval(() => { this.time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }, 1000);
+                    setTimeout(() => { this.bootOpen = false; }, 2500);
+                    this.enableDragging();
+                },
+                openWindow(key) { this.windows[key].open = true; this.windows[key].min = false; this.focused = key; },
+                focusWindow(key) { this.focused = key; },
+                enableDragging() {
+                    let isDragging = false, currentWindow = null, offsetX = 0, offsetY = 0;
+                    document.addEventListener('mousedown', (e) => {
+                        const header = e.target.closest('.window-header');
+                        if (header && !e.target.closest('.rounded-full')) {
+                            const win = header.closest('.window-node');
+                            if (win && !win.classList.contains('is-maximized')) {
+                                isDragging = true; currentWindow = win;
+                                currentWindow.style.transition = 'none'; currentWindow.style.cursor = 'grabbing';
+                                const rect = win.getBoundingClientRect(); offsetX = e.clientX - rect.left; offsetY = e.clientY - rect.top;
+                                this.focusWindow(win.id.replace('win-', ''));
+                            }
+                        }
+                    });
+                    document.addEventListener('mousemove', (e) => {
+                        if (isDragging && currentWindow) { e.preventDefault(); currentWindow.style.left = `${e.clientX - offsetX}px`; currentWindow.style.top = `${e.clientY - offsetY}px`; }
+                    });
+                    document.addEventListener('mouseup', () => {
+                        if (isDragging && currentWindow) { currentWindow.style.transition = ''; currentWindow.style.cursor = 'default'; }
+                        isDragging = false; currentWindow = null;
+                    });
+                },
+                
+// TERMINAL LOGIC
+    term: {
+    input: '',
+    history: [
+        { type: 'output', text: 'Ritun OS [Version 2.0.1]' },
+        { type: 'output', text: '(c) 2026 Ritun Corp. All rights reserved.' },
+        { type: 'output', text: 'Type "help" to see available commands.' }
+    ],
+    
+    // The Command Processor
+    handle(os) {
+        const cmd = this.input.trim().toLowerCase();
+        
+        // 1. Add the user's typed command to history
+        if (cmd) {
+            this.history.push({ type: 'input', text: this.input });
+        }
+
+        // 2. Logic Switch
+        switch (cmd) {
+            case 'help':
+                this.output('Available commands:');
+                this.output('  about    - Open System Profile');
+                this.output('  socials  - Open Browser Hub');
+                this.output('  code     - Open VS Code');
+                this.output('  clear    - Clear terminal');
+                this.output('  date     - Show current time');
+                this.output('  ls       - List directory');
+                break;
+
+            case 'clear':
+                this.history = [];
+                break;
+
+            case 'date':
+                this.output(new Date().toString());
+                break;
+
+            case 'about':
+                this.output('Opening System Profile...');
+                os.openWindow('about');
+                break;
+            
+            case 'socials':
+                this.output('Opening Social Hub...');
+                os.openWindow('browser');
+                break;
+
+            case 'code':
+                this.output('Opening VS Code...');
+                os.openWindow('vscode');
+                break;
+
+            case 'ls':
+                this.output('Desktop  Documents  Downloads  Pictures  profile.jpg');
+                break;
+
+            case 'whoami':
+                this.output('root (Ritun Jain)');
+                break;
+                
+            case 'exit':
+                os.windows.terminal.open = false;
+                break;
+
+            case '':
+                break;
+
+            default:
+                this.output(`Command not found: ${cmd}`);
+        }
+
+        // 3. Reset Input and Scroll to bottom
+        this.input = '';
+        this.$nextTick(() => {
+            const container = document.getElementById('term-content');
+            if(container) container.scrollTop = container.scrollHeight;
+        });
+    },
+
+    // Helper to push output lines
+    output(text) {
+        this.history.push({ type: 'output', text: text });
+    }
+},
+            }
+        }
+    </script>
+</body>
+</html>
