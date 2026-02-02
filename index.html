@@ -169,19 +169,83 @@
          </div>
     </div>
 
-    <div id="win-vscode" x-show="windows.vscode.open" x-cloak @mousedown="focusWindow('vscode')" :class="{'z-50': focused === 'vscode', 'z-40': focused !== 'vscode', 'is-minimized': windows.vscode.min, 'is-maximized': windows.vscode.max}" class="window-node bg-[#1e1e1e] rounded-xl overflow-hidden shadow-2xl border border-black/50 top-[10%] left-[10%] w-[800px] h-[550px]">
-         <div class="window-header bg-[#333333] px-4 py-2 flex items-center justify-between cursor-default select-none">
-             <div class="flex space-x-2"><div @click.stop="windows.vscode.open = false" class="w-3 h-3 bg-red-500 rounded-full cursor-pointer"></div><div @click.stop="windows.vscode.min = true" class="w-3 h-3 bg-yellow-500 rounded-full cursor-pointer"></div><div @click.stop="windows.vscode.max = !windows.vscode.max" class="w-3 h-3 bg-green-500 rounded-full cursor-pointer"></div></div>
-             <span class="text-slate-400 text-xs">README.md - Visual Studio Code</span><div class="w-10"></div>
+    <div id="win-vscode" x-show="windows.vscode.open" x-cloak @mousedown="focusWindow('vscode')"
+     :class="{'z-50': focused === 'vscode', 'z-40': focused !== 'vscode', 'is-minimized': windows.vscode.min, 'is-maximized': windows.vscode.max}"
+     class="window-node bg-[#1e1e1e] rounded-xl overflow-hidden shadow-2xl border border-black/50 top-[10%] left-[10%] w-[900px] h-[600px] flex flex-col font-sans">
+     
+     <div class="window-header bg-[#333333] px-4 py-2 flex items-center justify-between cursor-default select-none shrink-0">
+         <div class="flex space-x-2">
+             <div @click.stop="windows.vscode.open = false" class="w-3 h-3 bg-red-500 rounded-full cursor-pointer hover:bg-red-600"></div>
+             <div @click.stop="windows.vscode.min = true" class="w-3 h-3 bg-yellow-500 rounded-full cursor-pointer hover:bg-yellow-600"></div>
+             <div @click.stop="windows.vscode.max = !windows.vscode.max" class="w-3 h-3 bg-green-500 rounded-full cursor-pointer hover:bg-green-600"></div>
          </div>
-         <div class="flex flex-1 overflow-hidden">
-             <div class="w-12 bg-[#252526] border-r border-[#333]"></div>
-             <div class="flex-1 bg-[#1e1e1e] p-6 font-sans text-sm text-gray-300 overflow-auto">
-                 <h1 class="text-2xl font-bold text-blue-400 mb-4"># Ritun OS v3.0</h1>
-                 <p class="mb-4">Now updated with AI capabilities and Linux kernel simulation.</p>
+         <span class="text-slate-400 text-xs flex items-center gap-2">
+             <span x-text="code.active"></span> &mdash; Visual Studio Code
+         </span>
+         <div class="w-10"></div>
+     </div>
+
+     <div class="flex flex-1 overflow-hidden">
+         
+         <div class="w-12 bg-[#333333] flex flex-col items-center py-4 space-y-6 text-slate-500 border-r border-[#2b2b2b] shrink-0">
+             <svg class="w-6 h-6 text-white cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+             <svg class="w-6 h-6 hover:text-white transition cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+             <svg class="w-6 h-6 hover:text-white transition cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+         </div>
+
+         <div class="w-48 bg-[#252526] flex flex-col text-slate-300 border-r border-[#1e1e1e] shrink-0">
+             <div class="px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-500">Explorer</div>
+             <div class="flex items-center px-2 py-1 text-xs font-bold bg-[#37373d] text-white cursor-pointer">
+                 <svg class="w-3 h-3 mr-2 transform rotate-90" fill="currentColor" viewBox="0 0 20 20"><path d="M5 5l10 5-10 5V5z"/></svg>
+                 RITUN-OS
+             </div>
+             <div class="mt-1">
+                 <template x-for="(file, name) in code.files" :key="name">
+                     <div @click="code.active = name" 
+                          class="flex items-center px-4 py-1.5 text-sm cursor-pointer hover:bg-[#2a2d2e] transition group"
+                          :class="{'bg-[#37373d] text-white': code.active === name, 'text-slate-400': code.active !== name}">
+                         <span class="mr-2 text-base" x-text="file.icon"></span>
+                         <span x-text="name"></span>
+                     </div>
+                 </template>
              </div>
          </div>
-    </div>
+
+         <div class="flex-1 bg-[#1e1e1e] flex flex-col overflow-hidden">
+             
+             <div class="flex bg-[#252526] overflow-x-auto no-scrollbar">
+                 <template x-for="(file, name) in code.files">
+                     <div @click="code.active = name"
+                          class="flex items-center px-3 py-2 text-xs border-r border-[#1e1e1e] cursor-pointer min-w-fit"
+                          :class="{'bg-[#1e1e1e] text-white border-t-2 border-t-blue-500': code.active === name, 'text-slate-500 bg-[#2d2d2d] hover:bg-[#2a2d2e]': code.active !== name}">
+                         <span class="mr-2" x-text="file.icon"></span>
+                         <span x-text="name"></span>
+                         <span class="ml-2 hover:text-white rounded-md p-0.5">×</span>
+                     </div>
+                 </template>
+             </div>
+
+             <div class="flex-1 flex overflow-auto text-sm font-mono leading-6">
+                 <div class="w-12 bg-[#1e1e1e] text-[#858585] text-right pr-4 select-none pt-4 text-xs">
+                     <div x-html="code.getLines(code.files[code.active].content)"></div>
+                 </div>
+                 <div class="flex-1 p-4 text-gray-300 whitespace-pre" x-html="code.files[code.active].content"></div>
+             </div>
+             
+             <div class="h-6 bg-[#007acc] flex items-center justify-between px-3 text-xs text-white select-none">
+                 <div class="flex gap-4">
+                     <span>main*</span>
+                     <span x-text="code.files[code.active].errors + ' 0 ⚠'"></span>
+                 </div>
+                 <div class="flex gap-4">
+                     <span>Ln 12, Col 4</span>
+                     <span>UTF-8</span>
+                     <span x-text="code.files[code.active].lang"></span>
+                 </div>
+             </div>
+         </div>
+     </div>
+</div>
 
     <script>
         function osData() {
